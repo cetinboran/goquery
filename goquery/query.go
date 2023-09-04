@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 )
 
 type GoQuery struct {
@@ -76,6 +77,43 @@ func (q *GoQuery) CreateUpdate(safe bool) (query string, args []interface{}) {
 	if query[len(query)-2:] == ", " {
 		query = query[:len(query)-2]
 	}
+
+	if safe {
+		query += fmt.Sprintf(" WHERE %v = ?", q.UniqueString)
+
+	} else {
+		query += fmt.Sprintf(" WHERE %v = %v", q.UniqueString, q.UniqueValue)
+	}
+
+	return
+}
+
+func (q *GoQuery) CreateInsert(safe bool) (query string, args []interface{}) {
+	err := q.Check()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	query = fmt.Sprintf("INSERT INTO %v (", q.TableName)
+
+	for i, v := range q.ColmnNames {
+		if q.Checks[i] {
+			if safe {
+				query += fmt.Sprintf("%v,", v)
+				args = append(args, q.Values[i])
+
+			} else {
+				query += fmt.Sprintf("%v = %v, ", v, q.Values[i])
+			}
+		}
+	}
+
+	index := strings.LastIndex(query, ",")
+	if index != -1 {
+		query = query[:index]
+	}
+
+	query += ")"
 
 	if safe {
 		query += fmt.Sprintf(" WHERE %v = ?", q.UniqueString)
