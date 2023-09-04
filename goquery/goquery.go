@@ -45,18 +45,20 @@ func (g *GoQuery) check() error {
 func (q *GoQuery) Take() (columnNames []string, values []interface{}) {
 	v := reflect.ValueOf(q.Struct)
 	t := v.Type()
-	q.structLen = t.NumField()
 
+	var count int
 	for i := 0; i < q.structLen; i++ {
 		field := t.Field(i)
 		tagName := field.Tag.Get("column")
 		if tagName != "" {
+			count++
 			fieldValue := v.Field(i).Interface()
 			columnNames = append(columnNames, tagName)
 			values = append(values, fieldValue)
 		}
 	}
 
+	q.structLen = count
 	return
 }
 
