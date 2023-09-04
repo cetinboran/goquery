@@ -80,7 +80,7 @@ func (q *GoQuery) CreateUpdate(safe bool) (query string, args []interface{}) {
 
 	if safe {
 		query += fmt.Sprintf(" WHERE %v = ?", q.UniqueString)
-
+		args = append(args, q.UniqueValue)
 	} else {
 		query += fmt.Sprintf(" WHERE %v = %v", q.UniqueString, q.UniqueValue)
 	}
@@ -117,7 +117,7 @@ func (q *GoQuery) CreateInsert(safe bool) (query string, args []interface{}) {
 
 	if safe {
 		query += fmt.Sprintf(" WHERE %v = ?", q.UniqueString)
-
+		args = append(args, q.UniqueValue)
 	} else {
 		query += fmt.Sprintf(" WHERE %v = %v", q.UniqueString, q.UniqueValue)
 	}
