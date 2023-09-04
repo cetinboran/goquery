@@ -1,119 +1,141 @@
 # GoQuery - Dynamic Query Builder in Golang
 
-GoQuery is a Go (Golang) package that provides a dynamic query builder for SQL statements. It allows you to easily create UPDATE and INSERT statements based on the provided column names, values, and checks. This package aims to simplify the process of generating SQL queries dynamically in your Go applications.
-
-## Installation
-
-To use GoQuery in your Go project, you can install it using `go get`:
-
-```shell
-go get github.com/cetinboran/goquery
-```
+GoQuery is a library designed to assist in creating SQL queries in the Go programming language. This library simplifies database operations by leveraging struct structures.
 
 ## Usage
 
-### Importing the Package
+To use GoQuery, follow these steps:
 
-First, you need to import the GoQuery package in your Go code:
+1. First, include GoQuery in your project:
 
-```go
-import (
-    "github.com/cetinboran/goquery"
-)
-```
+   ```go
+   import "github.com/cetinboran/goquery"
+   ```
 
-### Creating a GoQuery Instance
+2. Initialize the `GoQuery` object and set the required parameters:
 
-You can create a GoQuery instance for a specific table by calling the `GoQueryInit` function:
+   ```go
+   // Define the database table name.
+   query := goquery.GoQueryInit("your_table_name")
 
-```go
-query := goquery.GoQueryInit("your_table_name")
-```
+   // Set the struct type.
+   yourStruct := YourStructType{}
+   query.SetStruct(yourStruct)
 
-### Setting Column Names and Values
+   // Set query safety and specify the unique column.
+   query.SetChecks([]bool{true, true, true}) // Mark your fields for query safety, for example.
+   query.SetUnique("unique_column_name", uniqueValue)
+   ```
 
-You can set the column names and values for your query using the following methods:
+3. Create SQL queries:
+    - Creating an update query:
+        ```go
+        updateQuery, args := query.CreateUpdate(true) // Use safe query (true)
+        ```
 
-```go
-query.SetColmnNames([]string{"column1", "column2", "column3"})
-query.SetValues([]interface{}{value1, value2, value3})
-```
+        or
 
-### Setting Checks
+        ```go
+        updateQuery, args := query.CreateUpdate(false) // Without using safe query
+        ```
 
-Checks are used to determine whether a specific column should be included in the query. You can set checks using the `SetChecks` method:
+        - Creating an insert query:
 
-```go
-query.SetChecks([]bool{true, false, true}) // Include column1 and column3 in the query
-```
+        ```go
+        insertQuery, args := query.CreateInsert(true) // Use safe query (true)
+        ```
 
-### Setting Unique Identifier
+        or
 
-You can set a unique identifier and its corresponding value for the WHERE clause of your query:
+        ```go
+        insertQuery, args := query.CreateInsert(false) // Without using safe query
+        ```
+        
+    - detais:  If you set the `safe` parameter to `false`, the argument interface array will indeed be empty, and the values will be directly embedded into the string. In this case, the SQL query will not use parameterized placeholders.
+    - However, if you set `safe` to `true`, the `args` interface array will be populated, and the SQL query string will contain placeholders, typically represented as `?`. This allows you to prepare the query in advance and then later supply the values, increasing security by protecting against SQL injection attacks.
+    - So, in summary:
+        - `safe` set to `false`: Values are directly embedded into the string, and `args` will be empty.
+        - `safe` set to `true`: Values are parameterized with placeholders, and `args` will contain the corresponding values, enhancing security by using prepared statements.
+        - Here's an example of how this affects the query generation:
 
-```go
-query.SetUniqueString("id")     // The column name for the unique identifier
-query.SetUniqueValue(uniqueID)  // The value of the unique identifier
-```
+    ```go
+    // When safe is false:
+    query := goquery.GoQueryInit("users")
+    // ... Set other parameters
+    insertQuery, args := query.CreateInsert(false)
+    // insertQuery might look like: "INSERT INTO users (column1, column2) VALUES (value1, value2)"
 
-### Creating an UPDATE Query
+    // When safe is true:
+    query := goquery.GoQueryInit("users")
+    // ... Set other parameters
+    insertQuery, args := query.CreateInsert(true)
+    // insertQuery might look like: "INSERT INTO users (column1, column2) VALUES (?, ?)"
+    // args will contain the actual values to be used in place of the placeholders
+    ```
+    - Using the `safe` parameter with `true` is a recommended practice for building secure SQL queries to prevent SQL injection.
 
-To create an UPDATE query, you can use the `CreateUpdate` method:
+    
 
-```go
-queryStr, args := query.CreateUpdate(true) // true for safe query with placeholders
-```
+4. Use SQL queries:
 
-To create an unsafe query without placeholders, set the argument to `false`.
+   ```go
+   // Example of executing the query in your database (this is just an example and may vary depending on the database used).
+   _, err := db.Exec(updateQuery, args...)
+   if err != nil {
+       log.Fatal(err)
+   }
+   ```
 
-### Creating an INSERT Query
+## Example Usage
 
-To create an INSERT query, you can use the `CreateInsert` method:
-
-```go
-queryStr, args := query.CreateInsert(true) // true for safe query with placeholders
-```
-
-To create an unsafe query without placeholders, set the argument to `false`.
-
-## Example
-
-Here's a simple example of creating an UPDATE query:
+Here is an example of how to create an SQL query using GoQuery:
 
 ```go
 package main
 
 import (
-    "fmt"
-    "github.com/cetinboran/goquery"
+	"fmt"
+	"log"
+	"github.com/cetinboran/goquery"
 )
 
+type User struct {
+	ID       int    `column:"id"`
+	Username string `column:"username"`
+	Email    string `column:"email"`
+}
+
 func main() {
-    query := goquery.GoQueryInit("users")
-    query.SetColmnNames([]string{"name", "email"})
-    query.SetValues([]interface{}{"John Doe", "john.doe@example.com"})
-    query.SetChecks([]bool{true, true})
-    query.SetUniqueString("id")
-    query.SetUniqueValue(1)
+	// Initialize the GoQuery object and set the required parameters.
+	query := goquery.GoQueryInit("users")
+	user := User{ID: 1, Username: "john_doe", Email: "john@example.com"}
+	query.SetStruct(user)
+	query.SetChecks([]bool{true, true, true})
+	query.SetUnique("id", user.ID)
 
-    queryStr, args := query.CreateUpdate(true)
+	// Create an update query.
+	updateQuery, args := query.CreateUpdate(true)
 
-    fmt.Println("Generated UPDATE query:")
-    fmt.Println(queryStr)
-    fmt.Println("Query arguments:")
-    fmt.Println(args)
+	// Display the generated query.
+	fmt.Println("Update Query:", updateQuery)
+	fmt.Println("Query Arguments:", args)
+
+	// Execute the query in the database (this is just an example and may vary depending on the database used).
+	_, err := db.Exec(updateQuery, args...)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 ```
 
-This will generate the following output:
+## Contribution
 
-```
-Generated UPDATE query:
-UPDATE users SET name = ?, email = ? WHERE id = ?
-Query arguments:
-[John Doe john.doe@example.com 1]
-```
+If you'd like to contribute to this project, please fork it and submit a pull request. Feel free to report any bugs or issues on the GitHub issues page as well.
 
-## Author
+## License
 
-This GoQuery package was created by [cetinboran](https://github.com/cetinboran).
+This project is licensed under the MIT License. For more information, please see the [LICENSE](LICENSE) file.
+
+---
+
+This README file provides essential information to get started with the GoQuery library. Don't forget to create documentation and guides specific to your project for more details.
