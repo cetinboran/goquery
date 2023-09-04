@@ -47,14 +47,14 @@ func (q *GoQuery) Take() (columnNames []string, values []interface{}) {
 	t := v.Type()
 
 	var count int
-	for i := 0; i < q.structLen; i++ {
+	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		tagName := field.Tag.Get("column")
 		if tagName != "" {
-			count++
 			fieldValue := v.Field(i).Interface()
 			columnNames = append(columnNames, tagName)
 			values = append(values, fieldValue)
+			count++
 		}
 	}
 
