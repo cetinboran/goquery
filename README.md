@@ -7,7 +7,7 @@ GoQuery is a Go (Golang) package that provides a dynamic query builder for SQL s
 To use GoQuery in your Go project, you can install it using `go get`:
 
 ```shell
-go get github.com/your-username/goquery
+go get github.com/cetinboran/goquery
 ```
 
 ## Usage
@@ -19,7 +19,6 @@ First, you need to import the GoQuery package in your Go code:
 ```go
 import (
     "github.com/cetinboran/goquery"
-    // Other necessary imports
 )
 ```
 
