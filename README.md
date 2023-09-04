@@ -1,0 +1,2 @@
+# goquery
+Create query faster.
